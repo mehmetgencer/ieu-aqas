@@ -30,6 +30,7 @@ def parse_course(department, course, storage):
     import bs4
     soup = bs4.BeautifulSoup(html, "html.parser")
     data={"Activity":[],"ID":[],"Weighting":[]}
+    idcounter=0
     for child in soup.find("table", id="evaluation_table1").contents[2:-1]:
         if type(child)==bs4.element.Tag and child.name=="tr":
             print("XXX ASSESSMENT XXX",
@@ -43,7 +44,8 @@ def parse_course(department, course, storage):
                 w=int(child.contents[5].contents[1].get_text().strip())
                 for i in range(nact):
                     data["Activity"].append(activity)
-                    data["ID"].append(i+1)
+                    idcounter+=1
+                    data["ID"].append(idcounter)
                     data["Weighting"].append(w/nact)
             else:
                 nact=None

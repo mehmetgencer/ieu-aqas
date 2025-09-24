@@ -48,7 +48,7 @@ app.layout = html.Div([
     html.Div(id="lopo-output"),
     html.H2(children="Bu LO-PO matrix her PO ne kadar destek veriyor?"),
     html.P("(Course program outcomes matrix burada otomatik oluşacak ama henüz formülünü düşünmedik)"),
-    html.H2(children="Grade list"),
+    html.H2(children="Kanıtlar/Not listeleri"),
     html.P("Dosya yüklenecek ve görüntülenecek"),
     html.H2(children="Bu grade'ler ve matrisler her LO ne kadar sağladı?"),
     html.P("Burada raporlanacak ama henüz formülünü düşünmedik"),
