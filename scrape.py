@@ -71,10 +71,10 @@ def parse_course(department, course, storage):
     fname=course+".csv"
     df.to_csv(Path(storage)/"a-to-lo"/department/fname, index=False)
     #LOPO
-    d={"LO_ID":[i+1 for i in range(len(los))]}
+    d={"LO_ID":["LO%d"%(i+1) for i in range(len(los))]}
     pos=program_outcomes[department]
     for i in range(len(pos)):
-        d["PO_%d"%(i+1)]=[None  for x in range(len(los))]
+        d["PO%d"%(i+1)]=[None  for x in range(len(los))]
     df=pd.DataFrame(d)
     fname=course+".csv"
     df.to_csv(Path(storage)/"lo-to-po"/department/fname, index=False)

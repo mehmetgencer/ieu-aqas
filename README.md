@@ -64,3 +64,6 @@ It is difficult to match OBS grade exports (which are the evidence of learning o
 * (BGÇ) A-to-LO matrix allows antry to non-existent activity rows, must be prevented and warning message should be shown to user.
 * (BGÇ) A-LO saving should be button triggered, instead of being automatic.
 * (MG) Saving is not safe. Someone else may be editing concurrently. File timestamp check can be a good idea.
+* (MG) Logging the update activity is needed
+* (MG) Different passwords can be used, to match to user login
+* Excel file has ',' instead of '.' in numbers!

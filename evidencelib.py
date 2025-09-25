@@ -30,6 +30,18 @@ def list_evidence(storage, department, course):
     for x in evidence_files: print(x)
     return evidence_files
 
+def has_evidence(storage, department, course):
+    tmp=list_evidence(storage, department, course)
+    if tmp:return True
+    else:return False
+
+def get_evidence(storage, department, course):
+    tmp=list_evidence(storage, department, course)
+    if not tmp:return None
+    else: return pd.read_excel(tmp[0])
+
+def get_matchscheme_path(storage, department, course):
+    return str(Path(storage)/"evidence"/department/course/"_matching.json")
 def get_matchscheme(storage, department, course):
     tmp=Path(storage)/"evidence"/department/course/"_matching.json"
     if os.path.exists(tmp):
@@ -38,6 +50,10 @@ def get_matchscheme(storage, department, course):
         return retval
     else:
         return None
+def has_matchscheme(storage, department, course):
+    tmp=get_matchscheme(storage, department, course)
+    if tmp is not None:return True
+    else: return False
 
 def get_alo_matrix(storage, department, course):
     require_department_and_course(department, course)
@@ -126,7 +142,8 @@ def rootcmd(command, storage, department, course):
         status,retval=check_match_scheme(storage,department,course,check_evidence=False)
         if not status:print("Check failed or not found")
     elif command=="check-evidence-structure":
-        check_match_scheme(storage,department,course,check_evidence=True)
+        status,retval=check_match_scheme(storage,department,course,check_evidence=True)
+        if not status:print("Check failed or not found")
     else:
         print("Unknown command:",command)
 if __name__ == '__main__':
