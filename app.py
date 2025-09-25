@@ -24,8 +24,8 @@ app.layout = html.Div([
         ),
     html.H2(children='Activity to learning outcomes (A-PO) matrix', style={'textAlign':'center'}),
     dcc.Dropdown(dict((d,d) for d in courses.keys()), 'dba', id='dropdown-departments'),
-    dcc.Dropdown(courses["dba"],courses["dba"][0],id='dropdown-courses'),
-    html.Ol(id="los",children="Learning outcomes: ..."),
+    dcc.Dropdown(courses["dba"],None,id='dropdown-courses'),
+    html.Ol(id="los",children="Learning outcomes: (Ders seçtiğinizde burası dolar)"),
     dag.AgGrid(
         id="alo-grid",
         defaultColDef={"editable": True},
