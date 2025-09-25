@@ -6,6 +6,10 @@ import click
 import pandas as pd
 
 def make_path_pattern(storage, department, course,pattern):
+    """
+    Makes a glob pattern for file listing, using '*'s in place of department and course if they are empty
+    User provided 'pattern' is appended at the end
+    """
     tmp=Path(storage)/"evidence"
     pattern="*.xlsx"
     if department: 
@@ -15,6 +19,9 @@ def make_path_pattern(storage, department, course,pattern):
     else:
         pattern="*/*/"+pattern
     return tmp,pattern
+
+def require_department_and_course(department, course):
+    if not department or not course:raise Exception("Department and course must be provided for this command")
 
 def list_evidence(storage, department, course):
     tmp,pattern=make_path_pattern(storage, department, course,"*.xlsx")
@@ -33,6 +40,7 @@ def get_matchscheme(storage, department, course):
         return None
 
 def get_alo_matrix(storage, department, course):
+    require_department_and_course(department, course)
     fname=course+".csv"
     df=pd.read_csv(Path(storage)/"a-to-lo"/department/fname)
     return df
@@ -45,6 +53,7 @@ def check_match_scheme(storage, department, course,check_evidence=False):
     column ids's are checked, i.e if all grades in evidence file(s) are mapped to some activity.
     The return value is a dictionary
     """
+    require_department_and_course(department, course)
     ms=get_matchscheme(storage, department, course)
     if not ms:
         return False, "No match scheme"
@@ -90,6 +99,7 @@ def check_match_scheme(storage, department, course,check_evidence=False):
             retval["evidences_nonexistent"]=list(set(usedevidences)-set(cols))
     print("RETVAL")
     pprint.pp(retval)
+    return True, retval
 
 @click.command()
 @click.option("--command", default="help", help="Give help")
@@ -111,10 +121,13 @@ def rootcmd(command, storage, department, course):
         retval=list_evidence(storage,department,course)
     elif command=="get-match-scheme":
         retval=get_matchscheme(storage,department,course)
+        if not retval:print("No match scheme found for departmen-course")
     elif command=="check-match-scheme":
-        check_match_scheme(storage,department,course,check_evidence=False)
+        status,retval=check_match_scheme(storage,department,course,check_evidence=False)
+        if not status:print("Check failed or not found")
     elif command=="check-evidence-structure":
         check_match_scheme(storage,department,course,check_evidence=True)
-
+    else:
+        print("Unknown command:",command)
 if __name__ == '__main__':
     rootcmd()

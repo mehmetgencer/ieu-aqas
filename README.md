@@ -32,14 +32,14 @@ In the following order:
 
         $ ./scrape.py --command download
         $ ./scrape.py --command parse
-        $ HOST=0.0.0.0 PORT=8050 python3 gui.py
+        $ HOST=0.0.0.0 PORT=8080 python3 gui.py
 
 # Run test server
 
 Something like:
 
     $cd tmp-akkreditasyon-webscrape
-    $~/venv-AQAS-app/bin/gunicorn  -w 4 -b 0.0.0.0:8050 app:app --daemon
+    $~/venv-AQAS-app/bin/gunicorn  -w 4 -b 0.0.0.0:8080 app:app --daemon
     $pkill gunicorn
 
 # Evidence matching scheme
@@ -53,3 +53,14 @@ It is difficult to match OBS grade exports (which are the evidence of learning o
 * Use of the above scheme should not change the resulting student grade (HBN in OBS, over 100)
 * Evidence files must be named as "year-year-semester-sectionno.xlsx" under the folder for the course. There can be multiple files but they all use the matching scheme stored in "_matching.json" in the same folder
 * OBS table header names have the structure "activity(%xx)_instructortag"
+
+# IEU specific design issues
+
+* Our syllabus format do not allow to detail multiple activities of the same kind. For example, when using multiple quizzes the weightages may be different, some may be proctered while others are not. This has percussions for LO matrix.
+* In addition our OBS
+
+# Issues and feature requests
+
+* (BGÇ) A-to-LO matrix allows antry to non-existent activity rows, must be prevented and warning message should be shown to user.
+* (BGÇ) A-LO saving should be button triggered, instead of being automatic.
+* (MG) Saving is not safe. Someone else may be editing concurrently. File timestamp check can be a good idea.
