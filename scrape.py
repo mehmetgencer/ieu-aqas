@@ -6,6 +6,8 @@ import sys, os, json, pprint
 from pathlib import Path
 import click
 import pandas as pd
+from settings import localsettings
+
 
 """ json.dump({
     "dba":["BUS 210","BUS 220"]
@@ -81,7 +83,7 @@ def parse_course(department, course, storage):
 
 @click.command()
 @click.option("--command", default="help", help="Give help")
-@click.option("--storage", default="data", help="Where to store data.")
+@click.option("--storage", default=localsettings["storage"], help="Where to store data.")
 #@click.option("--name", prompt="Your name", help="The person to greet.")
 def rootcmd(command, storage):
     """

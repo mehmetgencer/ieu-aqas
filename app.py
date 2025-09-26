@@ -5,9 +5,10 @@ import plotly.express as px
 import json, pprint
 import pandas as pd
 from pathlib import Path
+from settings import localsettings
 import evidencelib
 
-storage="data"
+storage=localsettings["storage"]
 courses=json.load(open("courselist.json","r"))
 departments=list(courses.keys())
 program_outcomes=json.load(open("pos.json","r"))

@@ -4,6 +4,7 @@ import sys, os, json, pprint, glob
 from pathlib import Path
 import click
 import pandas as pd
+from settings import localsettings
 
 def make_path_pattern(storage, department, course,pattern):
     """
@@ -119,7 +120,7 @@ def check_match_scheme(storage, department, course,check_evidence=False):
 
 @click.command()
 @click.option("--command", default="help", help="Give help")
-@click.option("--storage", default="data", help="Where to store data.")
+@click.option("--storage", default=localsettings["storage"], help="Where to store data.")
 @click.option("--department", default="")
 @click.option("--course", default="")
 def rootcmd(command, storage, department, course):
