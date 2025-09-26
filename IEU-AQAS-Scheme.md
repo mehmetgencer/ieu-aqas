@@ -14,7 +14,7 @@ Let $C_p$ be the set of core courses in a diploma programme, $p$. For any course
 
 Each course has a set of assessment activities, $A_c$. Each activity of a course, $a \in A_c$, contributes to one or more of the course learning outcomes. For example, $LOcontrib(a,l)$ is the  contribution of activity $a \in A_c$ to learning outcome $l \in L_c$. These contributions form a preliminarly A-to-LO contribution matrix for the course, $`X'_c`$ , whose elements are $`x'_{a,l}= LOcontrib(a,l)`$ .
 
-For the sake of simplicity the matrix $X'_c$ is a binary matrix, i.e. the values $LOcontrib(a,l)$ can take only values 0 or 1. However, there is also the problem that activities are of  different weightage, $w_{c,a}$, for ming a weightage matrix of the course activities, $\mathbf{w_c}$. For example, weight of final exam can be 30% (i.e. 0.3) whereas a homework can be 10%. To account for these differences we use a weighted A-to-LO contribution matrix: $X_c=\mathbf{w_c} X'_c$
+For the sake of simplicity the matrix $`X'_c`$ is a binary matrix, i.e. the values $`LOcontrib(a,l)`$ can take only values 0 or 1. However, there is also the problem that activities are of  different weightage, $w_{c,a}$, forming a weightage matrix of the course activities, $\mathbf{w_c}$. For example, weight of final exam can be 30% (i.e. 0.3) whereas a homework can be 10%. To account for these differences we use a weighted A-to-LO contribution matrix: $X_c=\mathbf{w_c} X'_c$
 
 Each course also has an ECTS credit value, $ects(c)$ which will be used later for the level of contribution.
 
