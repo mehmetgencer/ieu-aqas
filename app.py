@@ -198,7 +198,7 @@ def update_match_scheme_check_results(department,course):
 )
 def update_evidence_list_results(department,course):
     evidence_list=evidencelib.list_evidence(storage,department,course)
-    if evidence_list is None:return str("Bu ders için Kanıt bulunamadı. Kanıtları OBS'den dışa aktarıp .xlsx dosyaları olarak şu dizine koymalısınız:  %s"%str(evidencelib.make_path_pattern(storage, department, course,"*.xlsx")))
+    if not evidence_list:return str("Bu ders için Kanıt bulunamadı. Kanıtları OBS'den dışa aktarıp .xlsx dosyaları olarak şu dizine koymalısınız:  %s"%str(evidencelib.make_path_pattern(storage, department, course,"*.xlsx")))
     #return [html.P("Kanıt listesi:"),html.Ol(children=[html.Li(x) for x in evidence_list])]
     return [html.P("Kanıt listesi:")]+[html.Li(children=str(x)) for x in evidence_list]
 
