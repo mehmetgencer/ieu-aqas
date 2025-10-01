@@ -13,6 +13,12 @@ courses=json.load(open("courselist.json","r"))
 departments=list(courses.keys())
 program_outcomes=json.load(open("pos.json","r"))
 sdep,scourse=None,None
+
+def checkpasswd(passwd):
+    return passwd in ["111"]
+
+#external_stylesheets = ['/ieu.css']
+#app = Dash(routes_pathname_prefix="/dash/",external_stylesheets=external_stylesheets)
 app = Dash()
 dfex = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/wind_dataset.csv")
 coldefs=[{"field":x} for x in list(dfex.columns)]
@@ -24,8 +30,11 @@ app.layout = html.Div([
             type="password",
             placeholder="Enter password here",
         ),
-    dcc.Dropdown(dict((d,d) for d in courses.keys()), 'dba', id='dropdown-departments'),
-    dcc.Dropdown(courses["dba"],None,id='dropdown-courses'),
+    html.Button('Değişiklikleri Kaydet', id='save-button', n_clicks=0),
+    #dcc.Dropdown(dict((d,d) for d in courses.keys()), 'dba', id='dropdown-departments',disabled=True),
+    #dcc.Dropdown(courses["dba"],None,id='dropdown-courses',disabled=True),
+    dcc.Dropdown(dict((d,d) for d in courses.keys()),None , id='dropdown-departments',disabled=True),
+    dcc.Dropdown([],None,id='dropdown-courses',disabled=True),
     html.H2(children='1 - Activity to learning outcomes (A-PO) matrix'), #, style={'textAlign':'center'}
     html.Ol(id="los",children="Learning outcomes: (Ders seçtiğinizde burası dolar)"),
     dag.AgGrid(
@@ -67,19 +76,33 @@ app.layout = html.Div([
     html.P("Burada raporlanacak ama henüz formülünü düşünmedik"),
     ]
 )
+
+@callback(
+    Output("save-button","disabled"),
+    Output('dropdown-departments', 'disabled'),
+    Output('dropdown-courses', 'disabled'),
+    Input('passwd', 'value'),
+    #prevent_initial_call=True
+)
+def update_output(value):
+    if not checkpasswd(value):return True,True,True
+    return False,False,False
+
 @callback(
     Output('dropdown-courses', 'options'),
     Input('dropdown-departments', 'value')
 )
 def update_courselist(department):
-    opts = [{'label':opt, 'value':opt} for opt in courses[department]]
+    print("DEPARTMENT:",department)
+    if not department:return []
+    opts = [{'label':opt, 'value':opt} for opt in courses[str(department)]]
     #print(department,opts)
     return opts
 
 @callback(
     Output("alo-grid", "rowData"),
     Output("alo-grid", "columnDefs"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
@@ -100,7 +123,7 @@ def update_alogrid(department,course):
 @callback(
     Output("lopo-grid", "rowData"),
     Output("lopo-grid", "columnDefs"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
@@ -119,24 +142,24 @@ def update_lopogrid(department,course):
 
 @callback(
     Output("los", "children"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
 def update_courselos(department,course):
     fname=course+".json"
     los=json.load(open(Path(storage)/"lo-list"/department/fname,"r"))
-    return [html.H3(children="Learning outcomes list")]+[html.Li(children=x) for x in los]
+    return [html.H3(children="Learning outcomes list for course %s"%course)]+[html.Li(children=x) for x in los]
 
 @callback(
     Output("pos", "children"),
     Input('dropdown-departments', 'value'),
-    Input("dropdown-courses", "value"),
+    #Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
-def update_coursepos(department,course):
+def update_departmentpos(department):
     pos=program_outcomes[department]
-    return [html.H3(children="Program outcomes list")]+[html.Li(children=x) for x in pos]
+    return [html.H3(children="Program outcomes list for department %s"%department)]+[html.Li(children=x) for x in pos]
 
 
 @callback(
@@ -150,7 +173,7 @@ def update_coursepos(department,course):
 )
 def save_alo(cell_changed,passwd,row_data):
     #print("ROW_DATA",row_data)
-    if passwd!="111":return "INVALID PASSWORD"
+    if not checkpasswd(passwd):return "INVALID PASSWORD"
     df=pd.DataFrame(row_data)
     print("LENDF",len(df))
     if not cell_changed:return "PASSWORD OK"
@@ -181,7 +204,7 @@ def save_lopo(cell_changed,passwd,row_data):
 
 @callback(
     Output("match_scheme_check_results", "children"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
@@ -192,7 +215,7 @@ def update_match_scheme_check_results(department,course):
 
 @callback(
     Output("evidence_list_results", "children"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
@@ -204,7 +227,7 @@ def update_evidence_list_results(department,course):
 
 @callback(
     Output("evidence_match_scheme_check_results", "children"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
@@ -221,7 +244,7 @@ def update_evidence_match_scheme_check_results(department,course):
 @callback(
     Output("evidence-grid", "rowData"),
     Output("evidence-grid", "columnDefs"),
-    Input('dropdown-departments', 'value'),
+    State('dropdown-departments', 'value'),
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
@@ -236,6 +259,10 @@ def update_evidence_grid(department,course):
     else:
         return None, None
 
-server = app.server
+server = app.server #see https://community.plotly.com/t/how-to-add-your-dash-app-to-flask/51870/2
+@server.route("/hello")
+def home():
+    return "Hello, Flask!"
+
 if __name__ == "__main__":
     app.run(debug=True)
