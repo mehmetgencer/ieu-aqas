@@ -12,8 +12,8 @@ from settings import localsettings
 """ json.dump({
     "dba":["BUS 210","BUS 220"]
            }, open("courselist.json","w")) """
-courses=json.load(open("courselist.json","r"))
-program_outcomes=json.load(open("pos.json","r"))
+courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
+program_outcomes=json.load(open(Path(localsettings["storage"])/"pos.json","r"))
 def download_course(department, course, storage):
     url="https://ects.ieu.edu.tr/new/syllabus.php?section=%s.ieu.edu.tr&course_code=%s"%(department,quote(course))
     print("Downloading URL:",url)
@@ -76,7 +76,7 @@ def parse_course(department, course, storage):
     d={"LO_ID":["LO%d"%(i+1) for i in range(len(los))]}
     pos=program_outcomes[department]
     for i in range(len(pos)):
-        d["PO%d"%(i+1)]=[None  for x in range(len(los))]
+        d["PO%d"%(i+1)]=[1  for x in range(len(los))] #Uses default 1
     df=pd.DataFrame(d)
     fname=course+".csv"
     df.to_csv(Path(storage)/"lo-to-po"/department/fname, index=False)

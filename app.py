@@ -9,10 +9,10 @@ from settings import localsettings
 import evidencelib
 
 storage=localsettings["storage"]
-courses=json.load(open("courselist.json","r"))
+courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
 departments=list(courses.keys())
-program_outcomes=json.load(open("pos.json","r"))
-sdep,scourse=None,None
+program_outcomes=json.load(open(Path(localsettings["storage"])/"pos.json","r"))
+#sdep,scourse=None,None
 
 def checkpasswd(passwd):
     return passwd in ["111"]
@@ -35,7 +35,7 @@ app.layout = html.Div([
     #dcc.Dropdown(courses["dba"],None,id='dropdown-courses',disabled=True),
     dcc.Dropdown(dict((d,d) for d in courses.keys()),None , id='dropdown-departments',disabled=True),
     dcc.Dropdown([],None,id='dropdown-courses',disabled=True),
-    html.H2(children='1 - Activity to learning outcomes (A-PO) matrix'), #, style={'textAlign':'center'}
+    html.H2(children='1 - Activity to learning outcomes (A-LO) matrix'), #, style={'textAlign':'center'}
     html.Ol(id="los",children="Learning outcomes: (Ders seçtiğinizde burası dolar)"),
     dag.AgGrid(
         id="alo-grid",
@@ -43,7 +43,7 @@ app.layout = html.Div([
         #cellClassRules = {"bg-danger": "params.data.sickDays >= 5"}
         #rowData=dfex.to_dict("records"),#pd.read_csv(Path(storage)/"a-to-lo"/"dba"/"BUS 210.csv").to_dict("records"),
         #columnDefs=coldefs,
-        #columnSize="sizeToFit",
+        columnSize="autoSize",
         #dashGridOptions={
         # "rowDragManaged": True,
         # "rowDragEntireRow": True
@@ -55,6 +55,7 @@ app.layout = html.Div([
     dag.AgGrid(
         id="lopo-grid",
         defaultColDef={"editable": True},
+        columnSize="autoSize",
     ),
     html.Div(id="lopo-output"),
     html.H2(children="3 - Bu LO-PO matrix her PO ne kadar destek veriyor?"),
@@ -106,7 +107,7 @@ def update_courselist(department):
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
-def update_alogrid(department,course):
+def load_alogrid(department,course):
     print("Loading alo grid for",department,"---",course)
     fname=course+".csv"
     df=pd.read_csv(Path(storage)/"a-to-lo"/department/fname)
@@ -114,10 +115,10 @@ def update_alogrid(department,course):
             "function": "params.value && {'backgroundColor': 'rgb(255,0,0,0.2)'}"
         }
         } for x in list(df.columns)[3:]]
-    global sdep
-    global scourse
-    sdep,scourse=department,course
-    print("UPDATED DEPT-COURSE",sdep,"-",scourse)
+    #global sdep
+    #global scourse
+    #sdep,scourse=department,course
+    print("LOADED A-to-LO grid",department,"-",course)
     return df.to_dict("records"),coldefs
 
 @callback(
@@ -127,7 +128,7 @@ def update_alogrid(department,course):
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
-def update_lopogrid(department,course):
+def load_lopogrid(department,course):
     print("Loading lopo grid for",department,"---",course)
     fname=course+".csv"
     df=pd.read_csv(Path(storage)/"lo-to-po"/department/fname)
@@ -135,9 +136,9 @@ def update_lopogrid(department,course):
             "function": "params.value && {'backgroundColor': 'rgb(255,0,0,0.2)'}"
         }
         } for x in list(df.columns)[1:]]
-    global sdep
-    global scourse
-    sdep,scourse=department,course
+    #global sdep
+    #global scourse
+    #sdep,scourse=department,course
     return df.to_dict("records"),coldefs
 
 @callback(
@@ -146,7 +147,7 @@ def update_lopogrid(department,course):
     Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
-def update_courselos(department,course):
+def load_courselos(department,course):
     fname=course+".json"
     los=json.load(open(Path(storage)/"lo-list"/department/fname,"r"))
     return [html.H3(children="Learning outcomes list for course %s"%course)]+[html.Li(children=x) for x in los]
@@ -157,7 +158,7 @@ def update_courselos(department,course):
     #Input("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
-def update_departmentpos(department):
+def load_departmentpos(department):
     pos=program_outcomes[department]
     return [html.H3(children="Program outcomes list for department %s"%department)]+[html.Li(children=x) for x in pos]
 
@@ -166,21 +167,23 @@ def update_departmentpos(department):
     Output("alo-output", "children"), 
     Input("alo-grid", "cellValueChanged"),
     Input('passwd', 'value'),
-    #Input("dropdown-courses", "value"),
+    State("dropdown-departments", "value"),
+    State("dropdown-courses", "value"),
     State("alo-grid", "rowData"),
 
     prevent_initial_call=True,
 )
-def save_alo(cell_changed,passwd,row_data):
+def save_alo(cell_changed,passwd,department,course,row_data):
     #print("ROW_DATA",row_data)
     if not checkpasswd(passwd):return "INVALID PASSWORD"
     df=pd.DataFrame(row_data)
     print("LENDF",len(df))
-    if not cell_changed:return "PASSWORD OK"
+    if not cell_changed:return "Save alo: Cell not changed"
     if len(df)==0:return ""
-    print("SAVING ALO",sdep,scourse)
-    fname=scourse+".csv"
-    df.to_csv(Path(storage)/"a-to-lo"/sdep/fname,index=False)
+    print("SAVING ALO",department,course)
+    fname=course+".csv"
+    df.to_csv(Path(storage)/"a-to-lo"/department/fname,index=False)
+    print("Cell changed:",cell_changed)
     return f"UPDATED: {cell_changed}"
 
 @callback(
@@ -188,18 +191,20 @@ def save_alo(cell_changed,passwd,row_data):
     Input("lopo-grid", "cellValueChanged"),
     Input('passwd', 'value'),
     State("lopo-grid", "rowData"),
+    State("dropdown-departments", "value"),
+    State("dropdown-courses", "value"),
     prevent_initial_call=True,
 )
-def save_lopo(cell_changed,passwd,row_data):
+def save_lopo(cell_changed,passwd,row_data,department,course):
     #print("ROW_DATA",row_data)
     if passwd!="111":return "INVALID PASSWORD"
     df=pd.DataFrame(row_data)
     print("LENDF",len(df))
     if not cell_changed:return "PASSWORD OK"
     if len(df)==0:return ""
-    print("SAVING LOPO",sdep,scourse)
-    fname=scourse+".csv"
-    df.to_csv(Path(storage)/"lo-to-po"/sdep/fname,index=False)
+    print("SAVING LOPO",department,course)
+    fname=course+".csv"
+    df.to_csv(Path(storage)/"lo-to-po"/department/fname,index=False)
     return f"UPDATED: {cell_changed}"
 
 @callback(
