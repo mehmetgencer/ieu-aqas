@@ -92,7 +92,7 @@ def parse_course(department, course, storage):
     d={"LO_ID":["LO%d"%(i+1) for i in range(len(los))]}
     pos=program_outcomes[department]
     for i in range(len(pos)):
-        d["PO%d"%(i+1)]=[1  for x in range(len(los))] #Uses default 1
+        d["PO%d"%(i+1)]=[1 if pocontrib[i+1] else None  for x in range(len(los))] #Uses default 1
     df=pd.DataFrame(d)
     fname=course+".csv"
     df.to_csv(Path(storage)/"lo-to-po"/department/fname, index=False)

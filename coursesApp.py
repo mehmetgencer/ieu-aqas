@@ -7,7 +7,7 @@ import json, pprint
 import pandas as pd
 from pathlib import Path
 from settings import * #localsettings, checkpasswd
-import evidencelib
+import evidencelib, courselib
 
 #storage=localsettings["storage"]
 #courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
@@ -131,12 +131,15 @@ def load_alogrid(department,course):
 )
 def load_lopogrid(department,course):
     print("Loading lopo grid for",department,"---",course)
+    pocontrib=courselib.get_pocontrib_from_sylabus(department,course)
     fname=course+".csv"
     df=pd.read_csv(Path(storage)/"lo-to-po"/department/fname)
-    coldefs=[{"field":x,"editable":False} for x in list(df.columns)[:1]] +         [{"field":x,'cellStyle': {
-            "function": "params.value && {'backgroundColor': 'rgb(255,0,0,0.2)'}"
-        }
-        } for x in list(df.columns)[1:]]
+    cols=list(df.columns)
+    coldefs=[{"field":x,"editable":False} for x in cols[:1]] \
+        + [{"field":cols[i],
+            "editable":True if pocontrib[str(i)] else False,
+            'cellStyle': {"function": "params.value && {'backgroundColor': 'rgb(255,0,0,0.2)'}"}
+            } for i in range(1,len(cols))]
     #global sdep
     #global scourse
     #sdep,scourse=department,course
