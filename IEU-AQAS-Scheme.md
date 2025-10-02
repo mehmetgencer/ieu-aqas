@@ -2,7 +2,7 @@
 title: AQAS Activity $\rightarrow$ Learning Outcome $\rightarrow$ Program Outcome birleştirme formülasyonu
 numbersections: true
 #$$ sudo apt-get install pandoc groff ghostscript
-#$ pandoc --pdf-engine=pdfroff --number-sections --output=AQAS-scheme.pdf IEU-AQAS-Scheme.md
+#$ pandoc --pdf-engine=pdfroff --number-sections --output=IEU-AQAS-scheme.pdf IEU-AQAS-Scheme.md
 ---
 
 

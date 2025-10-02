@@ -1,25 +1,26 @@
 #!/usr/bin/python3
 from dash import Dash, html, dcc, Input, Output, State, callback
+from flask import Flask
 import dash_ag_grid as dag
 import plotly.express as px
 import json, pprint
 import pandas as pd
 from pathlib import Path
-from settings import localsettings
+from settings import * #localsettings, checkpasswd
 import evidencelib
 
-storage=localsettings["storage"]
-courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
-departments=list(courses.keys())
-program_outcomes=json.load(open(Path(localsettings["storage"])/"pos.json","r"))
+#storage=localsettings["storage"]
+#courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
+#departments=list(courses.keys())
+#program_outcomes=json.load(open(Path(localsettings["storage"])/"pos.json","r"))
 #sdep,scourse=None,None
 
-def checkpasswd(passwd):
-    return passwd in ["111"]
+#def checkpasswd(passwd):
+#    return passwd in ["111"]
 
 #external_stylesheets = ['/ieu.css']
 #app = Dash(routes_pathname_prefix="/dash/",external_stylesheets=external_stylesheets)
-app = Dash()
+app = Dash(server=False,routes_pathname_prefix="/course_level/")
 dfex = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/wind_dataset.csv")
 coldefs=[{"field":x} for x in list(dfex.columns)]
 #print("COLDEFS:",coldefs)
@@ -264,10 +265,12 @@ def update_evidence_grid(department,course):
     else:
         return None, None
 
-server = app.server #see https://community.plotly.com/t/how-to-add-your-dash-app-to-flask/51870/2
-@server.route("/hello")
-def home():
-    return "Hello, Flask!"
+#server = app.server #see https://community.plotly.com/t/how-to-add-your-dash-app-to-flask/51870/2
+#@server.route("/hello")
+#def home():
+#    return "Hello, Flask!"
 
 if __name__ == "__main__":
+    server = Flask(__name__)
+    app.init_app(server)
     app.run(debug=True)

@@ -39,7 +39,7 @@ In the following order:
 Something like:
 
     $cd tmp-akkreditasyon-webscrape
-    $~/venv-AQAS-app/bin/gunicorn  -w 4 -b 0.0.0.0:8080 app:app --daemon
+    $~/venv-AQAS-app/bin/gunicorn  -w 4 -b 0.0.0.0:8080 mainApp:server --daemon
     $pkill gunicorn
 
 # Evidence matching scheme

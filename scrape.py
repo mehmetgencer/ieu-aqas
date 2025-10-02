@@ -6,14 +6,14 @@ import sys, os, json, pprint
 from pathlib import Path
 import click
 import pandas as pd
-from settings import localsettings
+from settings import *
 
 
 """ json.dump({
     "dba":["BUS 210","BUS 220"]
            }, open("courselist.json","w")) """
-courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
-program_outcomes=json.load(open(Path(localsettings["storage"])/"pos.json","r"))
+#courses=json.load(open(Path(localsettings["storage"])/"courselist.json","r"))
+#program_outcomes=json.load(open(Path(localsettings["storage"])/"pos.json","r"))
 def download_course(department, course, storage):
     url="https://ects.ieu.edu.tr/new/syllabus.php?section=%s.ieu.edu.tr&course_code=%s"%(department,quote(course))
     print("Downloading URL:",url)
@@ -72,6 +72,22 @@ def parse_course(department, course, storage):
         df[colname]=df["Weighting"]/df["Weighting"]
     fname=course+".csv"
     df.to_csv(Path(storage)/"a-to-lo"/department/fname, index=False)
+    #POcontrib
+    pocontrib={}
+    for row in soup.find("table", id="yeters").find_all("tr")[2:]:
+        rowcells=row.find_all("td")
+        poid=int([x for x in rowcells[0].contents[0].children][0])
+        points=[]
+        for x in rowcells[2:]:
+            point=" ".join([i.text for i in x.contents]).strip()
+            points.append(point)
+        pval=0
+        for i in range(5):
+            if points[i]:pval=i+1
+        #print(f"ROW {poid}/{pval}:{points}",rowcells)
+        pocontrib[poid]=pval
+    fname=course+".json"
+    json.dump(pocontrib,open(Path(storage)/"pocontrib-in-syllabus"/department/fname,"w"))
     #LOPO
     d={"LO_ID":["LO%d"%(i+1) for i in range(len(los))]}
     pos=program_outcomes[department]
@@ -106,6 +122,7 @@ def rootcmd(command, storage):
             os.makedirs(Path(storage)/"a-to-lo"/department, exist_ok=True)
             os.makedirs(Path(storage)/"lo-list"/department, exist_ok=True)
             os.makedirs(Path(storage)/"lo-to-po"/department, exist_ok=True)
+            os.makedirs(Path(storage)/"pocontrib-in-syllabus"/department, exist_ok=True)
             for course in courses[department]:
                 parse_course(department,course,storage)
     else:
