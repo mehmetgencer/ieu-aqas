@@ -3,7 +3,7 @@ from dash import Dash, html, dcc, Input, Output, State, callback
 from flask import Flask
 import dash_ag_grid as dag
 import plotly.express as px
-import json, pprint
+import json, pprint, math
 import pandas as pd
 from pathlib import Path
 from settings import * #localsettings, checkpasswd
@@ -31,7 +31,6 @@ app.layout = html.Div([
             type="password",
             placeholder="Enter password here",
         ),
-    html.Button('Değişiklikleri Kaydet', id='save-button', n_clicks=0),
     #dcc.Dropdown(dict((d,d) for d in courses.keys()), 'dba', id='dropdown-departments',disabled=True),
     #dcc.Dropdown(courses["dba"],None,id='dropdown-courses',disabled=True),
     dcc.Dropdown(dict((d,d) for d in courses.keys()),None , id='dropdown-departments',disabled=True),
@@ -51,6 +50,7 @@ app.layout = html.Div([
         #    },
         ),
     html.Div(id="alo-output"),
+    html.Button('Değişiklikleri Kaydet', id='save-alo-grid-button', n_clicks=0),
     html.H2(children="2 - Learning outcomes to Program outcomes (LO-PO) matrix"),
     html.Ol(id="pos",children="Program outcomes: ..."),
     dag.AgGrid(
@@ -80,13 +80,13 @@ app.layout = html.Div([
 )
 
 @callback(
-    Output("save-button","disabled"),
+    Output("save-alo-grid-button","disabled"),
     Output('dropdown-departments', 'disabled'),
     Output('dropdown-courses', 'disabled'),
     Input('passwd', 'value'),
     #prevent_initial_call=True
 )
-def update_output(value):
+def checkpass_and_enable(value):
     if not checkpasswd(value):return True,True,True
     return False,False,False
 
@@ -94,7 +94,7 @@ def update_output(value):
     Output('dropdown-courses', 'options'),
     Input('dropdown-departments', 'value')
 )
-def update_courselist(department):
+def update_courselist_dropdown(department):
     print("DEPARTMENT:",department)
     if not department:return []
     opts = [{'label':opt, 'value':opt} for opt in courses[str(department)]]
@@ -121,6 +121,80 @@ def load_alogrid(department,course):
     #sdep,scourse=department,course
     print("LOADED A-to-LO grid",department,"-",course)
     return df.to_dict("records"),coldefs
+
+def is_empty(values):
+    """Returns True if all values (of a pandas data row/col or row/col segment) are NaN"""
+    for x in values:
+        if x is not None and x!='' and not math.isnan(float(x)):
+            print(f"Non-empty '{x}'")
+            return False
+    return True
+
+def is_all1or0s(values):
+    """Returns True if all values (of a pandas data row or row segment) are either 1s or 0s"""
+    for x in values:
+        if float(x) not in [0.,1.]:return False
+    return True
+
+def check_alo_grid_data(row_data):
+    df=pd.DataFrame(row_data)
+    for i,row in df.iterrows():
+        #print("row:",i,row)
+        if row[1]>=0:
+            if not is_all1or0s(row[3:]):return False, f"Values different from 0 or 1 in row {i+1} which is a used activity"
+        else:
+            if not is_empty(row[2:]):return False, f"Nonzero values in row {i+1}, which is not a used activity in course"
+    return True,"No errors in A-LO grid"
+
+""" @callback(
+    Output("alo-output", "children"), 
+    Input("alo-grid", "cellValueChanged"),
+    Input('passwd', 'value'),
+    State("dropdown-departments", "value"),
+    State("dropdown-courses", "value"),
+    State("alo-grid", "rowData"),
+
+    prevent_initial_call=True,
+)
+def alo_grid_changed_check(cell_changed,passwd,department,course,row_data):
+    #print("ROW_DATA",row_data)
+    if not checkpasswd(passwd):return "INVALID PASSWORD"
+    df=pd.DataFrame(row_data)
+    print("LENDF",len(df))
+    if not cell_changed:return "Save alo: Cell not changed"
+    if len(df)==0:return ""
+    print("SAVING ALO",department,course)
+    check_status,check_results=check_alo_grid_data(row_data)
+    print("Check results:",check_results)
+    fname=course+".csv"
+    #df.to_csv(Path(storage)/"a-to-lo"/department/fname,index=False)
+    print("Cell changed:",cell_changed)
+    if check_status:
+        return f"No problems found in A-LO matrix"
+    else:
+        return f"ERROR in A-LO matrix: {check_results}"
+ """
+@callback(
+    Output("alo-output", "children"), 
+    Input("save-alo-grid-button","n_clicks"),
+    State('passwd', 'value'),
+    State("dropdown-departments", "value"),
+    State("dropdown-courses", "value"),
+    State("alo-grid", "rowData"),
+
+    prevent_initial_call=True,
+)
+def save_alo_grid(n_clicks, passwd,department,course,row_data):
+    #print("ROW_DATA",row_data)
+    if not checkpasswd(passwd):return "INVALID PASSWORD"
+    df=pd.DataFrame(row_data)
+    print("SAVING ALO",department,course)
+    check_status,check_results=check_alo_grid_data(row_data)
+    if not check_status:
+        return f"ERROR in A-LO matrix: {check_results}"
+    fname=course+".csv"
+    df.to_csv(Path(storage)/"a-to-lo"/department/fname,index=False)
+    return "A-LO data saved"
 
 @callback(
     Output("lopo-grid", "rowData"),
@@ -166,29 +240,6 @@ def load_departmentpos(department):
     pos=program_outcomes[department]
     return [html.H3(children="Program outcomes list for department %s"%department)]+[html.Li(children=x) for x in pos]
 
-
-@callback(
-    Output("alo-output", "children"), 
-    Input("alo-grid", "cellValueChanged"),
-    Input('passwd', 'value'),
-    State("dropdown-departments", "value"),
-    State("dropdown-courses", "value"),
-    State("alo-grid", "rowData"),
-
-    prevent_initial_call=True,
-)
-def save_alo(cell_changed,passwd,department,course,row_data):
-    #print("ROW_DATA",row_data)
-    if not checkpasswd(passwd):return "INVALID PASSWORD"
-    df=pd.DataFrame(row_data)
-    print("LENDF",len(df))
-    if not cell_changed:return "Save alo: Cell not changed"
-    if len(df)==0:return ""
-    print("SAVING ALO",department,course)
-    fname=course+".csv"
-    df.to_csv(Path(storage)/"a-to-lo"/department/fname,index=False)
-    print("Cell changed:",cell_changed)
-    return f"UPDATED: {cell_changed}"
 
 @callback(
     Output("lopo-output", "children"), 

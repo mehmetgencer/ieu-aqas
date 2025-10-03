@@ -6,12 +6,12 @@ import plotly.express as px
 import json, pprint
 from pathlib import Path
 from settings import localsettings, checkpasswd
-import coursesApp
-import evidenceApp
+import courseLevelApp
+import programLevelApp
 
 server = Flask(__name__)
-coursesApp.app.init_app(server)
-evidenceApp.app.init_app(server)
+courseLevelApp.app.init_app(server)
+programLevelApp.app.init_app(server)
 
 @server.route("/")
 def home():

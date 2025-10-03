@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-from dash import Dash, html, dcc, Input, Output, State, callback
-import dash_ag_grid as dag
-import plotly.express as px
+from dash import Dash, html, dcc, Input, Output, State, callback # pyright: ignore[reportMissingImports]
+import dash_ag_grid as dag # pyright: ignore[reportMissingImports]
+import plotly.express as px # pyright: ignore[reportMissingImports]
 import json, pprint
 import pandas as pd
 from pathlib import Path
